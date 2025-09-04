@@ -2,21 +2,62 @@
 
 namespace App\Controller;
 
+use App\Dto\ListFilterDto;
 use App\Entity\Proverb;
 use App\Repository\ProverbRepository;
+use Nelmio\ApiDocBundle\Attribute\Model;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
+use OpenApi\Attributes as OA;
 
 final class ProverbController extends AbstractController
 {
     #[Route('api/proverbs', name: 'app_proverb_list', methods: ['GET'])]
-    public function list(ProverbRepository $proverbRepository, SerializerInterface $serializer): JsonResponse
+    #[OA\Response(
+        response: 200,
+        description: 'Proverb list',
+        content: new OA\JsonContent(
+            type: 'array',
+            items: new OA\Items(ref: new Model(type: Proverb::class, groups: ['proverb', 'tag', 'topic']))
+        )
+    )]
+    #[OA\Parameter(
+        name: 'limit',
+        description: 'Limit number of results',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer', default: 10)
+    )]
+    #[OA\Parameter(
+        name: 'page',
+        description: 'Page number',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'integer', default: 1)
+    )]
+    #[OA\Parameter(
+        name: 'query',
+        description: 'Query',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', nullable: true)
+    )]
+    #[OA\Parameter(
+        name: 'order_by',
+        description: 'Order by',
+        in: 'query',
+        required: false,
+        schema: new OA\Schema(type: 'string', nullable: true)
+    )]
+    #[OA\Tag(name: 'Proverbs')]
+    public function list(#[MapQueryString] ListFilterDto $listFilterDto, ProverbRepository $proverbRepository, SerializerInterface $serializer): JsonResponse
     {
         return JsonResponse::fromJsonString(
             $serializer->serialize(
-                $proverbRepository->findAll(),
+                $proverbRepository->findBy([], [$listFilterDto->order_by ?? 'content' => 'ASC'], $listFilterDto->limit, $listFilterDto->limit * ($listFilterDto->page - 1)),
                 'json', [
                     'groups' => ['proverb', 'tag', 'topic']
                 ]
@@ -25,24 +66,17 @@ final class ProverbController extends AbstractController
     }
 
     #[Route('api/proverbs/{id}', name: 'app_proverb_detail', methods: ['GET'])]
+    #[OA\Response(
+        response: 200,
+        description: 'Proverb detail',
+        content: new Model(type: Proverb::class, groups: ['proverb', 'tag', 'topic'])
+    )]
+    #[OA\Tag(name: 'Proverbs')]
     public function detail(Proverb $proverb, SerializerInterface $serializer): JsonResponse
     {
         return JsonResponse::fromJsonString(
             $serializer->serialize(
                 $proverb,
-                'json', [
-                    'groups' => ['proverb', 'tag', 'topic']
-                ]
-            )
-        );
-    }
-
-    #[Route('api/proverbs/search/{criteria}', name: 'app_proverb_search', methods: ['GET'])]
-    public function search(string $criteria, ProverbRepository $proverbRepository, SerializerInterface $serializer): JsonResponse
-    {
-        return JsonResponse::fromJsonString(
-            $serializer->serialize(
-                $proverbRepository->findByContent($criteria),
                 'json', [
                     'groups' => ['proverb', 'tag', 'topic']
                 ]
