@@ -6,6 +6,7 @@ use App\Dto\ListFilterDto;
 use App\Dto\ProverbDto;
 use App\Entity\Proverb;
 use App\Repository\ProverbRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Nelmio\ApiDocBundle\Attribute\Model;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -87,6 +88,7 @@ final class ProverbController extends AbstractController
     }
 
     #[Route('api/proverbs', name: 'app_proverb_add', methods: ['POST'])]
+    #[OA\Tag(name: 'Proverbs')]
     public function add(
         #[MapRequestPayload]  ProverbDto $proverbDto,
         SerializerInterface $serializer,
@@ -101,5 +103,27 @@ final class ProverbController extends AbstractController
                 ]
             )
         );
+    }
+
+    #[Route('api/proverbs/{id}', name: 'app_proverb_delete', methods: ['DELETE'])]
+    #[OA\Tag(name: 'Proverbs')]
+    public function delete(
+        ?Proverb $proverb,
+        EntityManagerInterface $entityManager,
+    ): JsonResponse
+    {
+        try {
+            if (!$proverb) {
+                return new JsonResponse('Proverb not found');
+            }
+
+            $entityManager->remove($proverb);
+            $entityManager->flush();
+
+            return new JsonResponse('Proverb deleted with success');
+        } catch (\Exception $e) {
+            return new JsonResponse('Proverb deleted with error');
+        }
+
     }
 }
