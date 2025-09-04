@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Dto\TopicDto;
 use App\Entity\Topic;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -16,28 +17,14 @@ class TopicRepository extends ServiceEntityRepository
         parent::__construct($registry, Topic::class);
     }
 
-    //    /**
-    //     * @return Topic[] Returns an array of Topic objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('t')
-    //            ->andWhere('t.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('t.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    public function add(TopicDto $dto)
+    {
+        $topic = $this->findOneBy(['label' => $dto->label]) ?? new Topic();
+        $topic->setLabel($dto->label);
 
-    //    public function findOneBySomeField($value): ?Topic
-    //    {
-    //        return $this->createQueryBuilder('t')
-    //            ->andWhere('t.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        $this->getEntityManager()->persist($topic);
+        $this->getEntityManager()->flush();
+
+        return $topic;
+    }
 }

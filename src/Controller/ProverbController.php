@@ -124,6 +124,5 @@ final class ProverbController extends AbstractController
         } catch (\Exception $e) {
             return new JsonResponse('Proverb deleted with error');
         }
-
     }
 }
