@@ -3,12 +3,14 @@
 namespace App\Controller;
 
 use App\Dto\ListFilterDto;
+use App\Dto\ProverbDto;
 use App\Entity\Proverb;
 use App\Repository\ProverbRepository;
 use Nelmio\ApiDocBundle\Attribute\Model;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use OpenApi\Attributes as OA;
@@ -77,6 +79,23 @@ final class ProverbController extends AbstractController
         return JsonResponse::fromJsonString(
             $serializer->serialize(
                 $proverb,
+                'json', [
+                    'groups' => ['proverb', 'tag', 'topic']
+                ]
+            )
+        );
+    }
+
+    #[Route('api/proverbs', name: 'app_proverb_add', methods: ['POST'])]
+    public function add(
+        #[MapRequestPayload]  ProverbDto $proverbDto,
+        SerializerInterface $serializer,
+        ProverbRepository $proverbRepository,
+    ): JsonResponse
+    {
+        return JsonResponse::fromJsonString(
+            $serializer->serialize(
+                $proverbRepository->add($proverbDto),
                 'json', [
                     'groups' => ['proverb', 'tag', 'topic']
                 ]

@@ -2,7 +2,9 @@
 
 namespace App\Repository;
 
+use App\Dto\ProverbDto;
 use App\Entity\Proverb;
+use App\Entity\Topic;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -16,42 +18,15 @@ class ProverbRepository extends ServiceEntityRepository
         parent::__construct($registry, Proverb::class);
     }
 
-    //    /**
-    //     * @return Proverb[] Returns an array of Proverb objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('p')
-    //            ->andWhere('p.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('p.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
-
-    //    public function findOneBySomeField($value): ?Proverb
-    //    {
-    //        return $this->createQueryBuilder('p')
-    //            ->andWhere('p.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
-
-    public function findByContent(string $value): array
+    public function add(ProverbDto $dto): ?Proverb
     {
-        $queryBuilder = $this->createQueryBuilder('p');
+        $proverb = new Proverb();
+        $proverb->setContent($dto->content);
+        $proverb->setTopic($this->getEntityManager()->getRepository(Topic::class)->find($dto->topic));
 
-        return $queryBuilder
-            ->where($queryBuilder->expr()->like('p.content', ':content'))
-            ->setParameter('content', '%' . $value . '%')
-            ->orderBy('p.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
+        $this->getEntityManager()->persist($proverb);
+        $this->getEntityManager()->flush();
+
+        return $proverb;
     }
 }
